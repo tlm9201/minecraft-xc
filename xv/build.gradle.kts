@@ -18,20 +18,18 @@ var target = ""
 
 plugins {
     // Apply the Kotlin JVM plugin to add support for Kotlin.
-    id("org.jetbrains.kotlin.jvm")
-    id("com.github.johnrengelman.shadow")
+    kotlin("jvm") version "2.1.0-Beta2"
+    id("com.github.johnrengelman.shadow") version "8.1.1"
 
     // minecraft papermc paperweight for minecraft nms classes
-    id("io.papermc.paperweight.userdev")
+    id("io.papermc.paperweight.userdev") version "1.7.5"
 
     // maven() // no longer needed in gradle 7
 }
 
 repositories {
-    // Use jcenter for resolving dependencies.
     // You can declare any Maven/Ivy/file repository here.
-    jcenter()
-    
+
     maven { // paper
         url = uri("https://papermc.io/repo/repository/maven-public/")
     }
@@ -94,31 +92,23 @@ dependencies {
     // Use the Kotlin JUnit integration.
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
 
-    if ( project.hasProperty("1.16") === true ) {
-        java.toolchain.languageVersion.set(JavaLanguageVersion.of(16)) // need java==16 for 1.16.5
-        sourceSets["main"].java.srcDir("src/nms/v1_16_R3")
-        paperDevBundle("1.16.5-R0.1-SNAPSHOT")
-        compileOnly("com.destroystokyo.paper:paper-api:1.16.5-R0.1-SNAPSHOT")
-        target = "1.16.5"
-    } else if ( project.hasProperty("1.18") === true ) {
-        java.toolchain.languageVersion.set(JavaLanguageVersion.of(17)) // need java==17 for 1.18.2
-        sourceSets["main"].java.srcDir("src/nms/v1_18_R2")
-        paperDevBundle("1.18.2-R0.1-SNAPSHOT")
-        compileOnly("io.papermc.paper:paper-api:1.18.2-R0.1-SNAPSHOT")
-        target = "1.18.2"
+    java.toolchain.languageVersion.set(JavaLanguageVersion.of(17)) // need java==17 for 1.18.2
+    paperweight.paperDevBundle("1.18.2-R0.1-SNAPSHOT")
+    sourceSets["main"].java.srcDir("src/nms/v1_18_R2")
 
-        tasks {
-            assemble {
-                // must write it like below because in 1.16 config, reobfJar does not exist
-                // so the simpler definition below wont compile
-                // dependsOn(reobfJar) // won't compile :^(
-                dependsOn(project.tasks.first { it.name.contains("reobfJar") })
-            }
-        }
+    target = "1.18.2"
 
-        tasks.named("reobfJar") {
-            base.archivesBaseName = "${OUTPUT_JAR_NAME}-${target}-SNAPSHOT"
+    tasks {
+        assemble {
+            // must write it like below because in 1.16 config, reobfJar does not exist
+            // so the simpler definition below wont compile
+            // dependsOn(reobfJar) // won't compile :^(
+            dependsOn(project.tasks.first { it.name.contains("reobfJar") })
         }
+    }
+
+    tasks.named("reobfJar") {
+        base.archivesBaseName = "${OUTPUT_JAR_NAME}-${target}-SNAPSHOT"
     }
 }
 
@@ -136,7 +126,7 @@ tasks {
             }
         }
 
-        classifier = ""
+        //classifier = ""
         configurations = mutableListOf(project.configurations.named("resolvableImplementation").get()) as List<FileCollection>
         // relocate("com.google", "phonon.xc.shadow.gson") // unneeded
     }
@@ -157,11 +147,11 @@ gradle.taskGraph.whenReady {
     tasks {
         named<ShadowJar>("shadowJar") {
             if ( hasTask(":release") ) {
-                baseName = "${OUTPUT_JAR_NAME}-${target}"
+                archiveBaseName = "${OUTPUT_JAR_NAME}-${target}"
                 minimize() // FOR PRODUCTION USE MINIMIZE
             }
             else {
-                baseName = "${OUTPUT_JAR_NAME}-${target}-SNAPSHOT"
+                archiveBaseName = "${OUTPUT_JAR_NAME}-${target}-SNAPSHOT"
                 // minimize() // FOR PRODUCTION USE MINIMIZE
             }
         }

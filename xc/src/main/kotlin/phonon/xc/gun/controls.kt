@@ -1796,7 +1796,7 @@ private fun inventoryRemoveItem(
 
                 for ( i in indicesToRemove ) {
                     val item = items[i]
-                    val itemAmount = item.getAmount()           
+                    val itemAmount = item!!.getAmount()
                     if ( itemAmount > amountToRemove ) {
                         item.setAmount(itemAmount - amountToRemove)
                         inventory.setItem(i, item)
